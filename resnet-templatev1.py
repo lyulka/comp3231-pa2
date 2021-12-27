@@ -62,6 +62,7 @@ class Stage0(torch.nn.Module):
         self.layer44 = torch.nn.BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.layer45 = torch.nn.ReLU(inplace=True)
         self.layer46 = torch.nn.Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        self._initialize_weights()
         self.layer47 = torch.nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.layer49 = torch.nn.ReLU(inplace=True)
         self.layer50 = torch.nn.Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
@@ -72,20 +73,11 @@ class Stage0(torch.nn.Module):
         self.layer55 = torch.nn.ReLU(inplace=True)
         self.layer56 = torch.nn.Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.layer57 = torch.nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        self.layer59 = torch.nn.ReLU(inplace=True)
-        self.layer60 = torch.nn.Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
-        self.layer61 = torch.nn.BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        self.layer62 = torch.nn.ReLU(inplace=True)
-        self.layer63 = torch.nn.Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
-        self.layer64 = torch.nn.BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        self.layer65 = torch.nn.ReLU(inplace=True)
-        self.layer66 = torch.nn.Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
-        self.layer67 = torch.nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        self._initialize_weights()
 
 
     def forward(self, x_rref):
         tik = time.time()
+        print(tik)
 
         x = x_rref.to_here().to("cpu")
         with self._lock:
@@ -146,21 +138,11 @@ class Stage0(torch.nn.Module):
             out56 = self.layer56(out55)
             out57 = self.layer57(out56)
             out57 = out57 + out49
-            out59 = self.layer59(out57)
-            out60 = self.layer60(out59)
-            out61 = self.layer61(out60)
-            out62 = self.layer62(out61)
-            out63 = self.layer63(out62)
-            out64 = self.layer64(out63)
-            out65 = self.layer65(out64)
-            out66 = self.layer66(out65)
-            out67 = self.layer67(out66)
-            out68 = out59+out67
 
         tok = time.time()
 
         print(f"stage0 time: {tok - tik}")
-        return out68
+        return out57
 
     def _initialize_weights(self):
         for m in self.modules():
@@ -183,6 +165,15 @@ class Stage1(torch.nn.Module):
         super(Stage1, self).__init__()
         self._lock = threading.Lock()
 
+        self.layer59 = torch.nn.ReLU(inplace=True)
+        self.layer60 = torch.nn.Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        self.layer61 = torch.nn.BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        self.layer62 = torch.nn.ReLU(inplace=True)
+        self.layer63 = torch.nn.Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        self.layer64 = torch.nn.BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        self.layer65 = torch.nn.ReLU(inplace=True)
+        self.layer66 = torch.nn.Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        self.layer67 = torch.nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.layer3 = torch.nn.ReLU(inplace=True)
         self.layer4 = torch.nn.Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.layer5 = torch.nn.BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
@@ -226,10 +217,21 @@ class Stage1(torch.nn.Module):
 
     def forward(self, x_rref):
         tik = time.time()
+        print(tik)
 
         x = x_rref.to_here().to("cpu")
         with self._lock:
-            out3 = self.layer3(x)
+            out59 = self.layer59(x)
+            out60 = self.layer60(out59)
+            out61 = self.layer61(out60)
+            out62 = self.layer62(out61)
+            out63 = self.layer63(out62)
+            out64 = self.layer64(out63)
+            out65 = self.layer65(out64)
+            out66 = self.layer66(out65)
+            out67 = self.layer67(out66)
+            out68 = out59+out67
+            out3 = self.layer3(out68)
             out4 = self.layer4(out3)
             out5 = self.layer5(out4)
             out6 = self.layer6(out5)
@@ -321,6 +323,7 @@ class Stage2(torch.nn.Module):
 
     def forward(self, x_rref):
         tik = time.time()
+        print(tik)
         
         x = x_rref.to_here().to("cpu")
         with self._lock:
@@ -419,6 +422,7 @@ class Stage3(torch.nn.Module):
 
     def forward(self, x_rref):
         tik = time.time()
+        print(tik)
 
         x = x_rref.to_here().to("cpu")
         with self._lock:
