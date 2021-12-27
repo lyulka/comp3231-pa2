@@ -1,0 +1,34 @@
+COMP3231 Programming Assignment 1
+
+###############
+Execution Times
+
+num_batches = 1
+batch_size =1 28
+image_w = 128
+image_h = 128
+###############
+
+
+## Alexnet
+Split size 1: 20.71s
+Split size 2: 13.87s
+Split size 4: 9.82s
+Split size 8: 9.74s
+Split size 16: 10.6s
+
+## Vggnet
+Split size 1: 40.99s
+Split size 2: 33.69s
+Split size 4: 34.51s
+Split size 8: 36.64s
+Split size 16: 42.94s
+
+## Resnet
+Split size 1: 153.88s
+Split size 2: 125.11s
+Split size 4: 114.16s
+Split size 8: 113.90s
+Split size 16: 122.59s
+
+
