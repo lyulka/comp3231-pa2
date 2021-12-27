@@ -325,7 +325,7 @@ class DistVggNet(nn.Module):
 #########################################################
 
 num_batches = 1
-batch_size = 1
+batch_size = 128
 image_w = 128
 image_h = 128
 
@@ -399,6 +399,6 @@ def run_worker(rank, world_size, split_size):
 if __name__=="__main__":
     world_size = 5
     tik = time.time()
-    mp.spawn(run_worker, args=(world_size, 1), nprocs=world_size, join=True)
+    mp.spawn(run_worker, args=(world_size, 16), nprocs=world_size, join=True)
     tok = time.time()
     print(f"execution time = {tok - tik}")

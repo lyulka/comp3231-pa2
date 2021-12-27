@@ -307,7 +307,7 @@ class Stage2(torch.nn.Module):
         
         x = x_rref.to_here().to("cpu")
         with self._lock:
-            out25 = self.layer25(x)
+            out25 = self.layer25(out23)
             out26 = self.layer26(out25)
             out27 = self.layer27(out26)
             out28 = self.layer28(out27)
@@ -317,7 +317,7 @@ class Stage2(torch.nn.Module):
             out32 = self.layer32(out31)
             out33 = self.layer33(out32)
             out33 = out33 + out25
-            out35 = self.layer35(out33)
+            out35 = self.layer35(x)
             out36 = self.layer36(out35)
             out37 = self.layer37(out36)
             out38 = self.layer38(out37)

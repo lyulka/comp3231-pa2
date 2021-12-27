@@ -25,22 +25,16 @@ class Stage0(torch.nn.Module):
         self.layer2 = torch.nn.Conv2d(3, 64, kernel_size=(11, 11), stride=(4, 4), padding=(2, 2))
         self.layer3 = torch.nn.ReLU(inplace=True)
         self.layer4 = torch.nn.MaxPool2d(kernel_size=3, stride=2, padding=0, dilation=1, ceil_mode=False)
-        self.layer5 = torch.nn.Conv2d(64, 192, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2))
 
     def forward(self, x_rref):
-        tik = time.time();
-
         x = x_rref.to_here().to("cpu")
         with self._lock:
             out2 = self.layer2(x)
             out3 = self.layer3(out2)
             out4 = self.layer4(out3)
-            out5 = self.layer5(out4)
 
-        tok = time.time();
-
-        print(f"stage0 time: {tok-tik}")
-        return out5
+        print("end of stage 0 forward")
+        return out4
 
     def parameter_rrefs(self):
         r"""
@@ -55,21 +49,21 @@ class Stage1(torch.nn.Module):
         super(Stage1, self).__init__()
         self._lock = threading.Lock()
 
-        self.layer1 = torch.nn.ReLU(inplace=True)
-        self.layer2 = torch.nn.MaxPool2d(kernel_size=3, stride=2, padding=0, dilation=1, ceil_mode=False)
+        self.layer1 = torch.nn.Conv2d(64, 192, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2))
+        self.layer2 = torch.nn.ReLU(inplace=True)
+        self.layer3 = torch.nn.MaxPool2d(kernel_size=3, stride=2, padding=0, dilation=1, ceil_mode=False)
+
+    
 
     def forward(self, x_rref):
-        tik = time.time();
-
         x = x_rref.to_here().to("cpu")
         with self._lock:
             out1 = self.layer1(x)
             out2 = self.layer2(out1)
+            out3 = self.layer3(out2)
         
-        tok = time.time()
-
-        print(f"stage1 time: {tok - tik}")
-        return out2
+        print("end of stage 1 forward")
+        return out3
 
     def parameter_rrefs(self):
         r"""
@@ -93,8 +87,6 @@ class Stage2(torch.nn.Module):
 
 
     def forward(self, x_rref):
-        tik = time.time()
-
         x = x_rref.to_here().to("cpu")
         with self._lock:
             out1 = self.layer1(x)
@@ -104,9 +96,7 @@ class Stage2(torch.nn.Module):
             out5 = self.layer5(out4)
             out6 = self.layer6(out5)
 
-        tok = time.time()
-
-        print(f"stage2 time: {tok - tik}")
+        print("end of stage 2 forward")
         return out6
 
     def parameter_rrefs(self):
@@ -133,8 +123,6 @@ class Stage3(torch.nn.Module):
     
 
     def forward(self, x_rref):
-        tik = time.time()
-
         x = x_rref.to_here().to("cpu")
         with self._lock:
             out1 = self.layer1(x)
@@ -147,10 +135,9 @@ class Stage3(torch.nn.Module):
             out8 = self.layer8(out7)
             out9 = self.layer9(out8)
             out10 = self.layer10(out9)
-
-        tok = time.time()
         
-        print(f"stage3 time: {tok - tik}")
+        print("end of stage 3 forward")
+
         return out10
 
     def parameter_rrefs(self):
@@ -305,8 +292,7 @@ def run_worker(rank, world_size, split_size):
 
 if __name__=="__main__":
     world_size = 5
-    for split_size in [16]:
-        tik = time.time()
-        mp.spawn(run_worker, args=(world_size, split_size), nprocs=world_size, join=True)
-        tok = time.time()
-        print(f"execution time = {tok - tik}")
+    tik = time.time()
+    mp.spawn(run_worker, args=(world_size,16), nprocs=world_size, join=True)
+    tok = time.time()
+    print(f"execution time = {tok - tik}")
