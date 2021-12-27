@@ -22,6 +22,7 @@ class Stage0(torch.nn.Module):
         self.layer2 = torch.nn.Conv2d(3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
         self.layer3 = torch.nn.ReLU(inplace=True)
         self.layer4 = torch.nn.Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        self.layer5 = torch.nn.ReLU(inplace=True)
         self._initialize_weights()
 
     def forward(self, x_rref):
@@ -33,11 +34,12 @@ class Stage0(torch.nn.Module):
             out2 = self.layer2(x)
             out3 = self.layer3(out2)
             out4 = self.layer4(out3)
+            out5 = self.layer5(out4)
 
         tok = time.time()
 
         print(f"stage0 time: {tok - tik}")
-        return out4
+        return out5
 
     def _initialize_weights(self):
         for m in self.modules():
@@ -65,7 +67,6 @@ class Stage1(torch.nn.Module):
         super(Stage1, self).__init__()
         self._lock = threading.Lock()
 
-        self.layer1 = torch.nn.ReLU(inplace=True)
         self.layer2 = torch.nn.MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
         self.layer3 = torch.nn.Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
         self.layer4 = torch.nn.ReLU(inplace=True)
@@ -74,6 +75,8 @@ class Stage1(torch.nn.Module):
         self.layer7 = torch.nn.MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
         self.layer8 = torch.nn.Conv2d(128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
         self.layer9 = torch.nn.ReLU(inplace=True)
+        self.layer10 = torch.nn.Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        self.layer11 = torch.nn.ReLU(inplace=True)
         self._initialize_weights()
     
 
@@ -83,8 +86,7 @@ class Stage1(torch.nn.Module):
 
         x = x_rref.to_here().to("cpu")
         with self._lock:
-            out1 = self.layer1(x)
-            out2 = self.layer2(out1)
+            out2 = self.layer2(x)
             out3 = self.layer3(out2)
             out4 = self.layer4(out3)
             out5 = self.layer5(out4)
@@ -92,11 +94,13 @@ class Stage1(torch.nn.Module):
             out7 = self.layer7(out6)
             out8 = self.layer8(out7)
             out9 = self.layer9(out8)
+            out10 = self.layer10(out9)
+            out11 = self.layer11(out10)
 
         tok = time.time()
 
         print(f"stage1 time: {tok - tik}")
-        return out9
+        return out11
 
     def _initialize_weights(self):
         for m in self.modules():
@@ -124,8 +128,6 @@ class Stage2(torch.nn.Module):
         super(Stage2, self).__init__()
         self._lock = threading.Lock()
 
-        self.layer1 = torch.nn.Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-        self.layer2 = torch.nn.ReLU(inplace=True)
         self.layer3 = torch.nn.Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
         self.layer4 = torch.nn.ReLU(inplace=True)
         self.layer5 = torch.nn.MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
@@ -134,7 +136,6 @@ class Stage2(torch.nn.Module):
         self.layer8 = torch.nn.Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
         self.layer9 = torch.nn.ReLU(inplace=True)
         self.layer10 = torch.nn.Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-        self.layer11 = torch.nn.ReLU(inplace=True)
         self._initialize_weights()
 
     def forward(self, x_rref):
@@ -143,9 +144,7 @@ class Stage2(torch.nn.Module):
 
         x = x_rref.to_here().to("cpu")
         with self._lock:
-            out1 = self.layer1(x)
-            out2 = self.layer2(out1)
-            out3 = self.layer3(out2)
+            out3 = self.layer3(x)
             out4 = self.layer4(out3)
             out5 = self.layer5(out4)
             out6 = self.layer6(out5)
@@ -153,12 +152,11 @@ class Stage2(torch.nn.Module):
             out8 = self.layer8(out7)
             out9 = self.layer9(out8)
             out10 = self.layer10(out9)
-            out11 = self.layer11(out10)
 
         tok = time.time()
 
         print(f"stage2 time: {tok - tik}")
-        return out11
+        return out10
 
     def _initialize_weights(self):
         for m in self.modules():
@@ -185,6 +183,7 @@ class Stage3(torch.nn.Module):
         super(Stage3, self).__init__()
         self._lock = threading.Lock()
 
+        self.layer0 = torch.nn.ReLU(inplace=True)
         self.layer1 = torch.nn.MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
         self.layer2 = torch.nn.Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
         self.layer3 = torch.nn.ReLU(inplace=True)
@@ -209,7 +208,8 @@ class Stage3(torch.nn.Module):
 
         x = x_rref.to_here().to("cpu")
         with self._lock:
-            out1 = self.layer1(x)
+            out0 = self.layer0(x)
+            out1 = self.layer1(out0)
             out2 = self.layer2(out1)
             out3 = self.layer3(out2)
             out4 = self.layer4(out3)

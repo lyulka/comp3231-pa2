@@ -12,8 +12,6 @@ import torch.optim as optim
 from torch.distributed.optim import DistributedOptimizer
 from torch.distributed.rpc import RRef
 
-
-
 num_classes = 1000
 
 
@@ -27,13 +25,17 @@ class Stage0(torch.nn.Module):
         self.layer4 = torch.nn.MaxPool2d(kernel_size=3, stride=2, padding=0, dilation=1, ceil_mode=False)
 
     def forward(self, x_rref):
+        tik = time.time();
+
         x = x_rref.to_here().to("cpu")
         with self._lock:
             out2 = self.layer2(x)
             out3 = self.layer3(out2)
             out4 = self.layer4(out3)
 
-        print(f"end of stage0 forward: {time.time()}")
+        tok = time.time();
+
+        print(f"stage0 time: {tok-tik}")
         return out4
 
     def parameter_rrefs(self):
@@ -53,16 +55,18 @@ class Stage1(torch.nn.Module):
         self.layer2 = torch.nn.ReLU(inplace=True)
         self.layer3 = torch.nn.MaxPool2d(kernel_size=3, stride=2, padding=0, dilation=1, ceil_mode=False)
 
-    
-
     def forward(self, x_rref):
+        tik = time.time();
+
         x = x_rref.to_here().to("cpu")
         with self._lock:
             out1 = self.layer1(x)
             out2 = self.layer2(out1)
             out3 = self.layer3(out2)
         
-        print(f"end of stage 1 forward: {time.time()}")
+        tok = time.time()
+
+        print(f"stage1 time: {tok - tik}")
         return out3
 
     def parameter_rrefs(self):
@@ -82,22 +86,22 @@ class Stage2(torch.nn.Module):
         self.layer2 = torch.nn.ReLU(inplace=True)
         self.layer3 = torch.nn.Conv2d(384, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
         self.layer4 = torch.nn.ReLU(inplace=True)
-        self.layer5 = torch.nn.Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-        self.layer6 = torch.nn.ReLU(inplace=True)
 
 
     def forward(self, x_rref):
+        tik = time.time()
+
         x = x_rref.to_here().to("cpu")
         with self._lock:
             out1 = self.layer1(x)
             out2 = self.layer2(out1)
             out3 = self.layer3(out2)
             out4 = self.layer4(out3)
-            out5 = self.layer5(out4)
-            out6 = self.layer6(out5)
 
-        print("end of stage 2 forward: {time.time()}")
-        return out6
+        tok = time.time()
+
+        print(f"stage2 time: {tok - tik}")
+        return out4
 
     def parameter_rrefs(self):
         r"""
@@ -108,9 +112,11 @@ class Stage2(torch.nn.Module):
 
 class Stage3(torch.nn.Module):
     def __init__(self):
-        super(Stage3, self).__init__()me
+        super(Stage3, self).__init__()
         self._lock = threading.Lock()
 
+        self.layerNeg1 = torch.nn.Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        self.layer0 = torch.nn.ReLU(inplace=True)
         self.layer1 = torch.nn.MaxPool2d(kernel_size=3, stride=2, padding=0, dilation=1, ceil_mode=False)
         self.layer4 = torch.nn.Dropout(p=0.5)
         self.layer5 = torch.nn.Linear(in_features=2304, out_features=4096, bias=True)
@@ -123,9 +129,13 @@ class Stage3(torch.nn.Module):
     
 
     def forward(self, x_rref):
+        tik = time.time()
+
         x = x_rref.to_here().to("cpu")
         with self._lock:
-            out1 = self.layer1(x)
+            outNeg1 = self.layerNeg1(x)
+            out0 = self.layer0(outNeg1)
+            out1 = self.layer1(out0)
             out2 = out1.size(0)
             out3 = out1.view(out2, 2304)
             out4 = self.layer4(out3)
@@ -135,9 +145,10 @@ class Stage3(torch.nn.Module):
             out8 = self.layer8(out7)
             out9 = self.layer9(out8)
             out10 = self.layer10(out9)
-        
-        print("end of stage 3 forward: {time.time()}")
 
+        tok = time.time()
+        
+        print(f"stage3 time: {tok - tik}")
         return out10
 
     def parameter_rrefs(self):
@@ -219,7 +230,7 @@ class DistAlexNet(nn.Module):
 #########################################################
 
 num_batches = 1
-batch_size = 128
+batch_size = 1
 image_w = 128
 image_h = 128
 
@@ -292,8 +303,8 @@ def run_worker(rank, world_size, split_size):
 
 if __name__=="__main__":
     world_size = 5
-    for i in [1, 4, 8, 16]:
+    for split_size in [1]:
         tik = time.time()
-        mp.spawn(run_worker, args=(world_size, 16), nprocs=world_size, join=True)
+        mp.spawn(run_worker, args=(world_size, split_size), nprocs=world_size, join=True)
         tok = time.time()
         print(f"execution time = {tok - tik}")
