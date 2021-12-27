@@ -655,7 +655,7 @@ def run_worker(rank, world_size, split_size):
 
 if __name__=="__main__":
     world_size = 5
-    for i in [1, 4, 8]:
+    for i in [1, 4, 8, 16]:
         tik = time.time()
         mp.spawn(run_worker, args=(world_size, 16), nprocs=world_size, join=True)
         tok = time.time()
